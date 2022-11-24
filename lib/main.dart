@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hive_encrypt/storage/adapter/user.dart';
-import 'package:flutter_hive_encrypt/storage/storage.dart';
+import 'package:flutter_hive_encrypt/storage/model/data.dart';
+import 'package:flutter_hive_encrypt/storage/core/secure_storage.dart';
+import 'package:flutter_hive_encrypt/storage/key/encrypt_key%20copy.dart';
 
 import 'configs/hive_config.dart';
 
@@ -26,7 +27,10 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({
+    super.key, 
+    required this.title
+    });
   final String title;
 
   @override
@@ -34,28 +38,28 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final storage = Storage();
-  int _counter = 0;
+  final storage = SecureStorage(EncryptKey());
+  String textJson= '';
 
-  void setUser() {
-    final user = User();
-    user.username = 'teste@teste.com.br';
-    user.password = 'teste123456';
-    user.token = '4967370d-3565-417a-8f0a-17bac443a3e0';
-
-    storage.write('user', user);
+  void setUser() async {
+    // final user = User();
+    // user.username = 'teste@teste.com.br';
+    // user.password = 'teste123456';
+    // user.token = '4967370d-3565-417a-8f0a-17bac443a3e0';
+    final obj = Data();
+    obj.birthday = DateTime(1987, 5, 21);
+    obj.old = 35;
+    obj.live = true;    
+    await storage.write('data', obj);
   }
 
   void getUser() async {
-    final user = await storage.read('user');
-    if (!(user == null)) {
-      debugPrint(user.toString());
-    }
-  }
-
-  void _incrementCounter() {
+    final exist = await storage.contains('data');
+    if(!exist) return;
+    final obj = await storage.read<Data>('data');
+    debugPrint(obj.toString());
     setState(() {
-      _counter++;
+      textJson = obj.toString();
     });
   }
 
@@ -70,10 +74,10 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'You have pushed the button this many times:',
+              'Json do objeto salvo',
             ),
             Text(
-              '$_counter',
+              textJson,
               style: Theme.of(context).textTheme.headline4,
             ),
             ElevatedButton(
@@ -86,11 +90,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
